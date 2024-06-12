@@ -1,8 +1,11 @@
 package com.jhw0900.moblie_injebus;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,6 +39,21 @@ public class MainActivity extends AppCompatActivity {
         String id = eId.getText().toString();
         String pw = ePw.getText().toString();
 
-        authService.login(id, pw);
+        authService.login(id, pw, new AuthenticationService.LoginCallback() {
+            @Override
+            public void onSuccess() {
+                runOnUiThread(() -> {
+                    Toast.makeText(MainActivity.this, "Login Successful!", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(MainActivity.this, ListActivity.class);
+                    startActivity(intent);
+                    finish();
+                });
+            }
+
+            @Override
+            public void onFailure() {
+                runOnUiThread(() -> Toast.makeText(MainActivity.this, "Login Failed.", Toast.LENGTH_SHORT).show());
+            }
+        });
     }
 }

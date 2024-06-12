@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="start_times">
+        <item>등교시간</item>
+        <item>08:00</item>
+    </string-array>
+    <string-array name="end_times">
+        <item>하교시간</item>
+        <item>17:20</item>
+    </string-array>
+
+    <string-array name="el_start_times">
+        <item>등교시간</item>
+        <item>07:40</item>
+    </string-array>
+    <string-array name="el_end_times">
+        <item>하교시간</item>
+        <item>17:20</item>
+    </string-array>
+</resources>

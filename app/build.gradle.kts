@@ -47,6 +47,9 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.6")
     // OkHttp
     implementation("com.squareup.okhttp3:okhttp-urlconnection:4.9.1")
+    // Jsoup
+    implementation("org.jsoup:jsoup:1.14.1")
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)

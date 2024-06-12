@@ -1,5 +1,8 @@
 package com.jhw0900.moblie_injebus.data.common;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+
 import java.security.cert.CertificateException;
 
 import javax.net.ssl.HostnameVerifier;
@@ -12,6 +15,7 @@ import javax.net.ssl.X509TrustManager;
 import okhttp3.OkHttpClient;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
+import retrofit2.converter.scalars.ScalarsConverterFactory;
 
 public class ApiClient {
     private static final String BASE_URL = "https://bus.inje.ac.kr/";
@@ -58,13 +62,16 @@ public class ApiClient {
 
     }
 
+    static Gson gson = new GsonBuilder()
+            .setLenient()
+            .create();
 
     public static Retrofit getClient(){
         if(retrofit == null){
             retrofit = new Retrofit.Builder()
                     .baseUrl(BASE_URL)
                     .client(getUnsafeOkHttpClient().build())
-                    .addConverterFactory(GsonConverterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create(gson))
                     .build();
         }
         return retrofit;
