@@ -166,6 +166,7 @@ public class ListActivity extends AppCompatActivity {
             reqData.put("end_line_"+day, "17:20");
         }
 
+        int seatNum = 5;
         Map<String, Object> dateSet = getCurDate();
         setTimeData(reqData);
 
@@ -193,10 +194,11 @@ public class ListActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
 
                             if ("error".equals(lineSet.get("status"))) {
+                                Toast.makeText(ListActivity.this, "요청하신 작업이 완료되었습니다.", Toast.LENGTH_LONG);
                                 shouldContinue.set(false);
                             } else if ("free".equals(beginData.get(curDay)) || lineSet.get("lineCode") == null) {
                                 // Other conditions
-                                String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+                                String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
                                 // Calculate next date
                                 LocalDate nextDate = null;
@@ -245,22 +247,63 @@ public class ListActivity extends AppCompatActivity {
                                                     public void onSuccess(String busCode) {
                                                         runOnUiThread(() -> {
                                                             Log.d("getBusCode", "Success");
+                                                            authService.bookBus(busCode, seatNum, new AuthenticationService.BookBusCallBack() {
+                                                                @Override
+                                                                public void onSuccess() {
+                                                                    runOnUiThread(() -> {
+                                                                        Log.d("getBusCode", "Success");
+                                                                    });
+                                                                }
 
+                                                                @Override
+                                                                public void onFailure() {
+                                                                    runOnUiThread(() -> {
+                                                                        Log.d("getBusCode", "FAILED");
+                                                                    });
+                                                                }
+                                                            });
                                                         });
                                                     }
 
                                                     @Override
                                                     public void onFailure() {
-                                                        runOnUiThread(() -> {
-                                                            Log.d("getBusCode", "FAILED");
-                                                        });
+                                                        runOnUiThread(() -> {});
                                                     }
                                                 });
 
                                                 Log.d("BOOK_TIME", "탑승 시간:" + busTime);
                                             }
                                             else if(busType.equals("하교") && busTime.equals(cEndTime)){
+                                                Log.d("BOOK_TIME", "하교: ");
+//                                                String busCode = getBusCode(reqData.get("lineCode"), m.get("busCode"));
+                                                authService.getBusCode(reqData.get("lineCode"), m.get("busCode"), new AuthenticationService.GetBusCodeCallBack() {
+                                                    @Override
+                                                    public void onSuccess(String busCode) {
+                                                        runOnUiThread(() -> {
+                                                            Log.d("getBusCode", "Success");
+                                                            authService.bookBus(busCode, seatNum, new AuthenticationService.BookBusCallBack() {
+                                                                @Override
+                                                                public void onSuccess() {
+                                                                    runOnUiThread(() -> {
+                                                                        Log.d("getBusCode", "Success");
+                                                                    });
+                                                                }
 
+                                                                @Override
+                                                                public void onFailure() {
+                                                                    runOnUiThread(() -> {
+                                                                        Log.d("getBusCode", "FAILED");
+                                                                    });
+                                                                }
+                                                            });
+                                                        });
+                                                    }
+
+                                                    @Override
+                                                    public void onFailure() {
+                                                        runOnUiThread(() -> {});
+                                                    }
+                                                });
                                             }
                                         }
                                         Log.d("BOOK_TIME", "===========================");
@@ -269,9 +312,7 @@ public class ListActivity extends AppCompatActivity {
 
                                 @Override
                                 public void onFailure() {
-                                    runOnUiThread(() -> {
-
-                                    });
+                                    runOnUiThread(() -> {});
                                 }
                             });
                         });
@@ -279,9 +320,7 @@ public class ListActivity extends AppCompatActivity {
 
                     @Override
                     public void onFailure() {
-                        runOnUiThread(() -> {
-
-                        });
+                        runOnUiThread(() -> {});
                     }
                 });
 
@@ -296,7 +335,7 @@ public class ListActivity extends AppCompatActivity {
     }
 
     public static Map<String, Object> getCurDate() {
-        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         LocalDate curDate = null;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             curDate = LocalDate.now();

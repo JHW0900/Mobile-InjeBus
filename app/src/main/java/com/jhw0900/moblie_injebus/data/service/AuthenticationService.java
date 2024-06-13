@@ -49,6 +49,10 @@ public class AuthenticationService {
         void onSuccess(String lineSet);
         void onFailure();
     }
+    public interface BookBusCallBack {
+        void onSuccess();
+        void onFailure();
+    }
 
 
 
@@ -240,6 +244,48 @@ public class AuthenticationService {
 
             @Override
             public void onFailure(Call<ResponseBody> call, Throwable t) {
+                t.printStackTrace();
+                callback.onFailure();
+            }
+        });
+    }
+
+    public void bookBus(String busCode, int seatNum, BookBusCallBack callback) {
+        String oriCode = busCode;
+
+        Call<HashMap<String, String>> getLineCall = apiService.bookBus(busCode, seatNum, oriCode);
+        getLineCall.enqueue(new Callback<HashMap<String, String>>() {
+            @Override
+            public void onResponse(Call<HashMap<String, String>> call, Response<HashMap<String, String>> response) {
+                if (response.isSuccessful()) {
+                    HashMap<String, String> resData = response.body();
+
+                    String status = resData.get("status");
+                    String msg = resData.get("message");
+
+                    System.out.println("[" + status + "]" + seatNum + "번 좌석" + msg);
+
+                    if("예약은 차량출발 1시간 전까지 가능합니다.".equals(msg)) callback.onFailure();
+
+                    if("success".equals(status)){
+                        System.out.println(seatNum + "번 좌석 예약 완료");
+                        callback.onSuccess();
+                    }
+                    else if("이미 선택된 좌석입니다.".equals(msg)){
+                        if((seatNum + 1) > 44) callback.onFailure();
+                        bookBus(busCode, seatNum + 1, callback);
+                    }
+                    else callback.onFailure();
+
+                    callback.onSuccess();
+                } else {
+                    System.out.println("Login Failed.");
+                    callback.onFailure();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<HashMap<String, String>> call, Throwable t) {
                 t.printStackTrace();
                 callback.onFailure();
             }
