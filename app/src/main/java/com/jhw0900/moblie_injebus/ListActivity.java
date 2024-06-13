@@ -43,6 +43,9 @@ public class ListActivity extends AppCompatActivity {
     private static String selRegion = "";
     AuthenticationService authService;
 
+    Spinner regionSpinner;
+    Spinner seatSpinner;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,8 +64,8 @@ public class ListActivity extends AppCompatActivity {
         ViewPager viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new SchedulePagerAdapter(getSupportFragmentManager()));
 
-        Spinner regionSpinner = findViewById(R.id.regionSpinner);
-        Spinner seatSpinner = findViewById(R.id.seatSpinner);
+        regionSpinner = findViewById(R.id.regionSpinner);
+        seatSpinner = findViewById(R.id.seatSpinner);
 
         initRegionSpinner(regionSpinner);
         initSeatSpinner(seatSpinner);
@@ -70,7 +73,7 @@ public class ListActivity extends AppCompatActivity {
 
     private void initSeatSpinner(Spinner spinner){
         List<String> seats = new ArrayList<>();
-        seats.add("좌석 선택");
+        seats.add("선호 좌석 선택");
         for(int i = 1; i < 45; i++) seats.add(i + "번");
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, seats);
@@ -120,7 +123,6 @@ public class ListActivity extends AppCompatActivity {
                 int value = regionMap.get(selectedRegion);
 
                 selRegion = selectedRegion;
-
                 ViewPager viewPager = findViewById(R.id.viewPager);
                 viewPager.setAdapter(new SchedulePagerAdapter(getSupportFragmentManager()));
             }
@@ -163,10 +165,15 @@ public class ListActivity extends AppCompatActivity {
         String []days = {"mon", "tue", "wed", "thu", "fri"};
         for(String day : days){
             reqData.put("begin_line_"+day, "08:00");
-            reqData.put("end_line_"+day, "17:20");
+            reqData.put("end_line_"+day, "free");
         }
 
-        int seatNum = 5;
+        int seatNum = 1;
+        String spinnerData = seatSpinner.getSelectedItem().toString();
+        if(!"선호 좌석 선택".equals(spinnerData)){
+            seatNum = Integer.valueOf(spinnerData.replace("번", ""));
+        }
+
         Map<String, Object> dateSet = getCurDate();
         setTimeData(reqData);
 
