@@ -23,10 +23,13 @@ public interface ApiService {
     Call<HashMap<String, String>> getLine(@Field("dateCode") String dateCode);
 
     @FormUrlEncoded
-    @POST("/reserve/select_seat.php")
+    @POST("reserve/select_seat.php")
     Call<ResponseBody> getBusCode(@Field("lineCode") String lineCode, @Field("timeCode") String timeCode);
 
     @FormUrlEncoded
-    @POST("/reserve/insert_reserve_proc.php")
+    @POST("reserve/insert_reserve_proc.php")
     Call<HashMap<String, String>> bookBus(@Field("busCode") String lineCode, @Field("seatNum") int seatNum, @Field("oriCode") String oriCode);
+
+    @GET("index.php")
+    Call<ResponseBody> getRecentInfo();
 }

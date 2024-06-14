@@ -18,14 +18,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Username" />
+            android:hint="아이디 (학번/사번)" />
 
         <EditText
             android:id="@+id/password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
-            android:hint="Password"
+            android:hint="비밀번호"
             android:inputType="textPassword" />
 
         <Button
@@ -34,7 +34,9 @@
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:onClick="onClickLogin"
-            android:text="Login" />
+            android:backgroundTint="#00A5CF"
+            android:text="Login"
+            android:textSize="18dp"/>
 
         <ProgressBar
             android:id="@+id/progress_bar"

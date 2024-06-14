@@ -13,8 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,6 +52,10 @@ public class AuthenticationService {
         void onFailure();
     }
 
+    public interface GetRecentInfoCallBack {
+        void onSuccess(Map<String, String> res);
+        void onFailure();
+    }
 
 
     public void login(String id, String password, LoginCallback callback) {
@@ -291,4 +293,91 @@ public class AuthenticationService {
             }
         });
     }
+
+    public void getRecentInfo(GetRecentInfoCallBack callback){
+        Call<ResponseBody> apiCall = apiService.getRecentInfo();
+
+        apiCall.enqueue(new Callback<ResponseBody>() {
+            private String parseOnclickText(String onclickText) {
+                String cleanText = onclickText.replaceAll("[^0-9NY]", " ").trim();
+                cleanText = cleanText.replaceAll(" +", " ");
+                return cleanText;
+            }
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                if(response.isSuccessful()){
+                    ResponseBody resData = response.body();
+                    try {
+                        Map<String, String> busInfo = new HashMap<>();
+                        busInfo.put("status", "fail");
+
+                        String html = resData.string();
+
+                        Document soup = Jsoup.parse(html);
+                        String rootSelector = "#extends > div > ul > li";
+                        String infoSelector = rootSelector + " > a";
+
+                        Elements infoList = soup.select(infoSelector);
+
+                        for (int i = 0; i < 1; i++) {
+                            if(infoList.isEmpty()) break;
+
+                            Element elInfo = infoList.get(i);
+                            Element elCode = infoList.get(i + 1);
+
+//                            "info_line" -> "노선 : 창원"
+//                            "info_cancel" -> "취소가능 : (06-17 07:00까지)"
+//                            "cancel_code" -> "2380704"
+//                            "cancel_type" -> "N"
+//                            "info_date" -> "06-17 (월) 08:00"
+//                            "info_bus" -> "차량 : 1호차 - 9번"
+
+                            Elements pInfoList = elInfo.getElementsByTag("p");
+                            busInfo.put("info_date", elInfo.getElementsByTag("h2").text().replace("\u00a0", " "));
+                            busInfo.put("info_line", pInfoList.get(0).text());
+                            busInfo.put("info_bus", pInfoList.get(1).text());
+                            busInfo.put("info_cancel", pInfoList.get(2).text());
+
+                            busInfo.put("busNumber", busInfo.get("info_bus").split(" - ")[0].split(" : ")[1]);
+                            busInfo.put("seatNumber", busInfo.get("info_bus").split(" - ")[1]);
+
+                            busInfo.put("busDate", busInfo.get("info_date").split(" ")[0]
+                                    .replace("-", "월 ") + "일");
+                            busInfo.put("boardBus", busInfo.get("info_date").split(" ")[2]);
+
+                            int boardHour = Integer.valueOf(busInfo.get("boardBus").split(":")[0]);
+                            if(boardHour > 12){
+                                busInfo.put("sRegion", "인제대");
+                                busInfo.put("eRegion", busInfo.get("info_line").split(" : ")[1]);
+                            } else {
+                                busInfo.put("sRegion", busInfo.get("info_line").split(" : ")[1]);
+                                busInfo.put("eRegion", "인제대");
+                            }
+
+                            String onclickText = elCode.attr("onclick");
+                            String cancelInfo = parseOnclickText(onclickText);
+                            String[] cancelInfoArray = cancelInfo.split(" ");
+
+                            busInfo.put("cancel_code", cancelInfoArray[0]);
+                            busInfo.put("cancel_type", cancelInfoArray[1]);
+                            busInfo.put("status", "success");
+                        }
+
+                        callback.onSuccess(busInfo);
+                    } catch (IOException e) {
+                        callback.onFailure();
+                        throw new RuntimeException(e);
+                    }
+                } else {
+                    callback.onFailure();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
+    }
 }
+

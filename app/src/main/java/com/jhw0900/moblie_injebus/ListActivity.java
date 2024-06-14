@@ -8,7 +8,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
@@ -56,10 +60,11 @@ public class ListActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+        authService = new AuthenticationService();
+        getRecentInfo();
+
         beginData = new HashMap<>();
         endData = new HashMap<>();
-
-        authService = new AuthenticationService();
 
         ViewPager viewPager = findViewById(R.id.viewPager);
         viewPager.setAdapter(new SchedulePagerAdapter(getSupportFragmentManager()));
@@ -168,10 +173,12 @@ public class ListActivity extends AppCompatActivity {
             reqData.put("end_line_"+day, "free");
         }
 
-        int seatNum = 1;
+        int seatNum;
         String spinnerData = seatSpinner.getSelectedItem().toString();
         if(!"선호 좌석 선택".equals(spinnerData)){
             seatNum = Integer.valueOf(spinnerData.replace("번", ""));
+        } else {
+            seatNum = 1;
         }
 
         Map<String, Object> dateSet = getCurDate();
@@ -201,8 +208,8 @@ public class ListActivity extends AppCompatActivity {
                         runOnUiThread(() -> {
 
                             if ("error".equals(lineSet.get("status"))) {
-                                Toast.makeText(ListActivity.this, "요청하신 작업이 완료되었습니다.", Toast.LENGTH_LONG);
                                 shouldContinue.set(false);
+                                onCompletion();
                             } else if ("free".equals(beginData.get(curDay)) || lineSet.get("lineCode") == null) {
                                 // Other conditions
                                 String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
@@ -248,7 +255,6 @@ public class ListActivity extends AppCompatActivity {
 
                                             if(busType.equals("등교") && busTime.equals(cBeginTime)){
                                                 Log.d("BOOK_TIME", "등교: ");
-//                                                String busCode = getBusCode(reqData.get("lineCode"), m.get("busCode"));
                                                 authService.getBusCode(reqData.get("lineCode"), m.get("busCode"), new AuthenticationService.GetBusCodeCallBack() {
                                                     @Override
                                                     public void onSuccess(String busCode) {
@@ -341,6 +347,13 @@ public class ListActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void onCompletion() {
+        runOnUiThread(() -> {
+            getRecentInfo();
+            Toast.makeText(ListActivity.this, "요청하신 예약이 완료되었습니다!", Toast.LENGTH_LONG).show();
+        });
+    }
+
     public static Map<String, Object> getCurDate() {
         String[] days = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
         LocalDate curDate = null;
@@ -373,4 +386,55 @@ public class ListActivity extends AppCompatActivity {
         }
     }
 
+    public void getRecentInfo(){
+        authService.getRecentInfo(new AuthenticationService.GetRecentInfoCallBack(){
+
+            @Override
+            public void onSuccess(Map<String, String> res) {
+                runOnUiThread(() -> {
+                    int []idList = {
+                            R.id.nextBus, R.id.busNumber, R.id.sRegion, R.id.eRegion, R.id.seatNumber,
+                            R.id.boardBus, R.id.seatTitle, R.id.boardTitle, R.id.cancelTitle,
+                            R.id.cancelTime };
+
+                    Map<Integer, String> busInfoMap = new HashMap<>();
+                    busInfoMap.put(R.id.nextBus, "busDate");
+                    busInfoMap.put(R.id.busNumber, "busNumber");
+                    busInfoMap.put(R.id.sRegion, "sRegion");
+                    busInfoMap.put(R.id.eRegion, "eRegion");
+                    busInfoMap.put(R.id.seatNumber, "seatNumber");
+                    busInfoMap.put(R.id.boardBus, "boardBus");
+
+                    if("success".equals(res.get("status"))){
+                        ((LinearLayout) findViewById(R.id.listLayout)).setPadding(64, 64, 64, 64);
+                        ((TextView) findViewById(R.id.textView)).setVisibility(View.GONE);
+                        for (int j : idList){
+                            ((TextView) findViewById(j)).setVisibility(View.VISIBLE);
+                        }
+                        ((Button) findViewById(R.id.cancelBtn)).setVisibility(View.VISIBLE);
+                        ((ImageView) findViewById(R.id.directionIco)).setVisibility(View.VISIBLE);
+                        for(int id : busInfoMap.keySet()){
+                            if(id == R.id.nextBus)
+                                ((TextView) findViewById(id)).setText("다음 버스: " + res.get(busInfoMap.get(id)));
+                            else
+                                ((TextView) findViewById(id)).setText(res.get(busInfoMap.get(id)));
+                        }
+                    } else {
+                        ((LinearLayout) findViewById(R.id.listLayout)).setPadding(16, 250, 16, 250);
+                        ((TextView) findViewById(R.id.textView)).setVisibility(View.VISIBLE);
+                        for (int j : idList) {
+                            ((TextView) findViewById(j)).setVisibility(View.GONE);
+                        }
+                        ((Button) findViewById(R.id.cancelBtn)).setVisibility(View.GONE);
+                        ((ImageView) findViewById(R.id.directionIco)).setVisibility(View.GONE);
+                    }
+                });
+            }
+
+            @Override
+            public void onFailure() {runOnUiThread(() -> {
+                System.out.println("Failed");
+            });}
+        });
+    }
 }
