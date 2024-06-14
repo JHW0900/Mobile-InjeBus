@@ -17,6 +17,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
@@ -25,9 +26,12 @@ import androidx.core.view.WindowInsetsCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager.widget.ViewPager;
 
 import com.jhw0900.moblie_injebus.data.service.AuthenticationService;
+import com.jhw0900.moblie_injebus.fragments.GameFragment;
+import com.jhw0900.moblie_injebus.fragments.ScheduleFragment;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -46,9 +50,11 @@ public class ListActivity extends AppCompatActivity {
     private static Map<String, String> beginData;
     private static Map<String, String> endData;
     private static String selRegion = "";
+    private GameFragment gameFragment;
     AuthenticationService authService;
 
     private ProgressDialog progressDialog;
+    private FragmentManager fragmentManager;
 
     Spinner regionSpinner;
     Spinner seatSpinner;
@@ -65,6 +71,21 @@ public class ListActivity extends AppCompatActivity {
         });
         authService = new AuthenticationService();
         getRecentInfo();
+
+        fragmentManager = getSupportFragmentManager();
+        Button fetchDataButton = findViewById(R.id.button2);
+        fetchDataButton.setOnClickListener(this::onClick);
+
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (fragmentManager.getBackStackEntryCount() > 0) {
+                    fragmentManager.popBackStack();
+                } else {
+                    finish();
+                }
+            }
+        });
 
         beginData = new HashMap<>();
         endData = new HashMap<>();
@@ -190,8 +211,10 @@ public class ListActivity extends AppCompatActivity {
         AtomicBoolean shouldContinue = new AtomicBoolean(true);
         AtomicBoolean shouldSkip = new AtomicBoolean(false);
 
-        progressDialog = ProgressDialog.show(ListActivity.this, "Loading", "Please wait...", true);
+        showGameFragment();
+        //progressDialog = ProgressDialog.show(ListActivity.this, "Loading", "Please wait...", true);
 
+        //*
         new Thread(() -> {
             while (shouldContinue.get()) {
                 if (shouldSkip.getAndSet(false)) {
@@ -350,15 +373,17 @@ public class ListActivity extends AppCompatActivity {
                 }
             }
         }).start();
+        // */
     }
 
     private void onCompletion() {
         runOnUiThread(() -> {
             getRecentInfo();
+            gameFragment.setExitVisiblity(true);
 
-            if (progressDialog != null && progressDialog.isShowing()) {
-                progressDialog.dismiss();
-            }
+//            if (progressDialog != null && progressDialog.isShowing()) {
+//                progressDialog.dismiss();
+//            }
 
             Toast.makeText(ListActivity.this, "요청하신 예약이 완료되었습니다!", Toast.LENGTH_LONG).show();
         });
@@ -446,5 +471,33 @@ public class ListActivity extends AppCompatActivity {
                 System.out.println("Failed");
             });}
         });
+    }
+
+    private void showGameFragment() {
+        gameFragment = new GameFragment();
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.fragmentContainer, gameFragment);
+        transaction.commit();
+
+        findViewById(R.id.fragmentContainer).setVisibility(View.VISIBLE);
+        findViewById(R.id.cardView).setVisibility(View.GONE);
+    }
+
+    private void hideGameFragment() {
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        Fragment fragment = fragmentManager.findFragmentById(R.id.fragmentContainer);
+        if (fragment != null) {
+            transaction.remove(fragment);
+            transaction.commit();
+            fragmentManager.popBackStack();
+        }
+
+        // Ensure the fragment container is hidden
+        findViewById(R.id.fragmentContainer).setVisibility(View.GONE);
+        findViewById(R.id.cardView).setVisibility(View.VISIBLE);
+    }
+
+    public void onGameEnd() {
+        hideGameFragment();
     }
 }
