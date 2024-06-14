@@ -2,6 +2,7 @@ package com.jhw0900.moblie_injebus;
 
 import static android.app.PendingIntent.getActivity;
 
+import android.app.ProgressDialog;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -46,6 +47,8 @@ public class ListActivity extends AppCompatActivity {
     private static Map<String, String> endData;
     private static String selRegion = "";
     AuthenticationService authService;
+
+    private ProgressDialog progressDialog;
 
     Spinner regionSpinner;
     Spinner seatSpinner;
@@ -186,6 +189,8 @@ public class ListActivity extends AppCompatActivity {
 
         AtomicBoolean shouldContinue = new AtomicBoolean(true);
         AtomicBoolean shouldSkip = new AtomicBoolean(false);
+
+        progressDialog = ProgressDialog.show(ListActivity.this, "Loading", "Please wait...", true);
 
         new Thread(() -> {
             while (shouldContinue.get()) {
@@ -350,6 +355,11 @@ public class ListActivity extends AppCompatActivity {
     private void onCompletion() {
         runOnUiThread(() -> {
             getRecentInfo();
+
+            if (progressDialog != null && progressDialog.isShowing()) {
+                progressDialog.dismiss();
+            }
+
             Toast.makeText(ListActivity.this, "요청하신 예약이 완료되었습니다!", Toast.LENGTH_LONG).show();
         });
     }
