@@ -12,13 +12,15 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.jhw0900.moblie_injebus.ListActivity;
 import com.jhw0900.moblie_injebus.R;
 
 public class ScheduleFragment extends Fragment {
 
     private static final String ARG_DAY = "day";
     private static String selRegion = "";
-
+    private Spinner sSpinner;
+    private Spinner eSpinner;
     public static ScheduleFragment newInstance(String day, String region) {
         selRegion = region;
         ScheduleFragment fragment = new ScheduleFragment();
@@ -33,6 +35,9 @@ public class ScheduleFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_schedule, container, false);
 
+        sSpinner = view.findViewById(R.id.start_time_spinner);
+        eSpinner = view.findViewById(R.id.end_time_spinner);
+
         // Get day argument and set TextView or other UI elements
         if (getArguments() != null) {
             String day = getArguments().getString(ARG_DAY);
@@ -46,6 +51,8 @@ public class ScheduleFragment extends Fragment {
             // Set different data for each day
             ArrayAdapter<String> startTimeAdapter;
             ArrayAdapter<String> endTimeAdapter;
+
+            selRegion = ((ListActivity) getActivity()).getSelRegion();
 
             if(!selRegion.equals("울산")){
                 startTimeAdapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.start_times));
@@ -63,5 +70,18 @@ public class ScheduleFragment extends Fragment {
         }
 
         return view;
+    }
+
+    public String getStartSpinnerValue() {
+        if (sSpinner != null) {
+            return sSpinner.getSelectedItem().toString();
+        }
+        return null;
+    }
+    public String getEndSpinnerValue() {
+        if (eSpinner != null) {
+            return eSpinner.getSelectedItem().toString();
+        }
+        return null;
     }
 }

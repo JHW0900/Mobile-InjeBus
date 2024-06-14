@@ -53,8 +53,9 @@ public class ListActivity extends AppCompatActivity {
     private GameFragment gameFragment;
     AuthenticationService authService;
 
-    private ProgressDialog progressDialog;
     private FragmentManager fragmentManager;
+    private SchedulePagerAdapter schedulePagerAdapter;
+    private ViewPager viewPager;
 
     Spinner regionSpinner;
     Spinner seatSpinner;
@@ -90,8 +91,9 @@ public class ListActivity extends AppCompatActivity {
         beginData = new HashMap<>();
         endData = new HashMap<>();
 
-        ViewPager viewPager = findViewById(R.id.viewPager);
-        viewPager.setAdapter(new SchedulePagerAdapter(getSupportFragmentManager()));
+        viewPager = findViewById(R.id.viewPager);
+        schedulePagerAdapter = new SchedulePagerAdapter(getSupportFragmentManager());
+        viewPager.setAdapter(schedulePagerAdapter);
 
         regionSpinner = findViewById(R.id.regionSpinner);
         seatSpinner = findViewById(R.id.seatSpinner);
@@ -152,8 +154,7 @@ public class ListActivity extends AppCompatActivity {
                 int value = regionMap.get(selectedRegion);
 
                 selRegion = selectedRegion;
-                ViewPager viewPager = findViewById(R.id.viewPager);
-                viewPager.setAdapter(new SchedulePagerAdapter(getSupportFragmentManager()));
+                viewPager.setAdapter(schedulePagerAdapter);
             }
 
             @Override
@@ -163,38 +164,56 @@ public class ListActivity extends AppCompatActivity {
         });
     }
 
-    private static class SchedulePagerAdapter extends FragmentPagerAdapter {
+    private class SchedulePagerAdapter extends FragmentPagerAdapter {
 
-        private static final String[] DAYS = {"월요일", "화요일", "수요일", "목요일", "금요일"};
+        private final String[] DAYS = {"월요일", "화요일", "수요일", "목요일", "금요일"};
+        private final List<ScheduleFragment> fragments;
 
         public SchedulePagerAdapter(FragmentManager fm) {
             super(fm, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT);
+            fragments = new ArrayList<>();
+            for (String day : DAYS) {
+                fragments.add(ScheduleFragment.newInstance(day, selRegion));
+            }
         }
 
         @NonNull
         @Override
         public Fragment getItem(int position) {
-            return ScheduleFragment.newInstance(DAYS[position], selRegion);
+            return fragments.get(position);
         }
 
         @Override
         public int getCount() {
             return DAYS.length;
         }
+
+        public ScheduleFragment getFragment(int position) {
+            return fragments.get(position);
+        }
     }
 
     public void onClick(View v){
         Map<String, String> reqData = new HashMap<>();
-        reqData.put("lineCode", "8");
+        String regionData = regionSpinner.getSelectedItem().toString();
+        int lineCode = regionMap.get(regionData);
+
+        reqData.put("lineCode", String.valueOf(lineCode));
         reqData.put("begin_line_sun", "free");
         reqData.put("end_line_sun", "free");
         reqData.put("begin_line_sat", "free");
         reqData.put("end_line_sat", "free");
 
         String []days = {"mon", "tue", "wed", "thu", "fri"};
-        for(String day : days){
-            reqData.put("begin_line_"+day, "08:00");
-            reqData.put("end_line_"+day, "free");
+        for(int i = 0; i < days.length; i++){
+            String sTime = getSpinnerValueForDay(i, true);
+            String eTime = getSpinnerValueForDay(i, false);
+
+            sTime = (sTime == null || sTime.equals("등교시간")) ? "free" : sTime;
+            eTime = (eTime == null || eTime.equals("하교시간")) ? "free" : eTime;
+
+            reqData.put("begin_line_"+days[i], sTime);
+            reqData.put("end_line_"+days[i], eTime);
         }
 
         int seatNum;
@@ -210,11 +229,10 @@ public class ListActivity extends AppCompatActivity {
 
         AtomicBoolean shouldContinue = new AtomicBoolean(true);
         AtomicBoolean shouldSkip = new AtomicBoolean(false);
-
+        //*
         showGameFragment();
         //progressDialog = ProgressDialog.show(ListActivity.this, "Loading", "Please wait...", true);
 
-        //*
         new Thread(() -> {
             while (shouldContinue.get()) {
                 if (shouldSkip.getAndSet(false)) {
@@ -439,6 +457,7 @@ public class ListActivity extends AppCompatActivity {
                     busInfoMap.put(R.id.eRegion, "eRegion");
                     busInfoMap.put(R.id.seatNumber, "seatNumber");
                     busInfoMap.put(R.id.boardBus, "boardBus");
+                    busInfoMap.put(R.id.cancelTime, "cancelTime");
 
                     if("success".equals(res.get("status"))){
                         ((LinearLayout) findViewById(R.id.listLayout)).setPadding(64, 64, 64, 64);
@@ -446,7 +465,6 @@ public class ListActivity extends AppCompatActivity {
                         for (int j : idList){
                             ((TextView) findViewById(j)).setVisibility(View.VISIBLE);
                         }
-                        ((Button) findViewById(R.id.cancelBtn)).setVisibility(View.VISIBLE);
                         ((ImageView) findViewById(R.id.directionIco)).setVisibility(View.VISIBLE);
                         for(int id : busInfoMap.keySet()){
                             if(id == R.id.nextBus)
@@ -460,7 +478,6 @@ public class ListActivity extends AppCompatActivity {
                         for (int j : idList) {
                             ((TextView) findViewById(j)).setVisibility(View.GONE);
                         }
-                        ((Button) findViewById(R.id.cancelBtn)).setVisibility(View.GONE);
                         ((ImageView) findViewById(R.id.directionIco)).setVisibility(View.GONE);
                     }
                 });
@@ -499,5 +516,13 @@ public class ListActivity extends AppCompatActivity {
 
     public void onGameEnd() {
         hideGameFragment();
+    }
+
+    public String getSelRegion(){ return selRegion; }
+
+    public String getSpinnerValueForDay(int position, boolean isStart) {
+        ScheduleFragment fragment = schedulePagerAdapter.getFragment(position);
+        if(isStart) return fragment.getStartSpinnerValue();
+        else return fragment.getEndSpinnerValue();
     }
 }

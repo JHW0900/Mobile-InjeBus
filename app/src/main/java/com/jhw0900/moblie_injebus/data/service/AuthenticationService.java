@@ -1,7 +1,6 @@
 package com.jhw0900.moblie_injebus.data.service;
 
 import com.jhw0900.moblie_injebus.data.common.ApiClient;
-import com.jhw0900.moblie_injebus.data.common.ApiService;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -344,6 +343,8 @@ public class AuthenticationService {
                             busInfo.put("busDate", busInfo.get("info_date").split(" ")[0]
                                     .replace("-", "월 ") + "일");
                             busInfo.put("boardBus", busInfo.get("info_date").split(" ")[2]);
+                            busInfo.put("cancelTime", busInfo.get("info_cancel").split(" : ")[1]
+                                    .replace("(", "").replace(")", ""));
 
                             int boardHour = Integer.valueOf(busInfo.get("boardBus").split(":")[0]);
                             if(boardHour > 12){

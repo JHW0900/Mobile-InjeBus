@@ -158,17 +158,6 @@
                         android:layout_height="wrap_content"
                         android:text="MM-dd HH-mm" />
                 </LinearLayout>
-
-                <Button
-                    android:id="@+id/cancelBtn"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:background="@android:color/transparent"
-                    android:padding="8dp"
-                    android:text="취소"
-                    android:textColor="@android:color/holo_red_dark" />
             </LinearLayout>
 
             <TextView

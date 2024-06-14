@@ -1,4 +1,4 @@
-package com.jhw0900.moblie_injebus.data.common;
+package com.jhw0900.moblie_injebus.data.service;
 
 import java.util.HashMap;
 
