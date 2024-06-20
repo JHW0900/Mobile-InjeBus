@@ -25,12 +25,15 @@ public class GameFragment extends Fragment implements View.OnTouchListener {
     ImageView catImg;
     TextView clickCounter;
     TextView exitTrigger;
+    TextView loadingText;
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.loading_layout, container, false);
 
         exitTrigger = view.findViewById(R.id.textView2);
+        loadingText = view.findViewById(R.id.textView3);
         clickCounter = view.findViewById(R.id.clickCounter);
         catImg = view.findViewById(R.id.catImg);
 
@@ -71,10 +74,14 @@ public class GameFragment extends Fragment implements View.OnTouchListener {
     }
 
     public void setExitVisiblity(boolean isVisible){
-        if(!isVisible)
+        if(!isVisible){
+            loadingText.setVisibility(View.VISIBLE);
             exitTrigger.setVisibility(View.GONE);
-        else
+        }
+        else{
+            loadingText.setVisibility(View.GONE);
             exitTrigger.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
